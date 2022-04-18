@@ -1,0 +1,48 @@
+MODEL:
+  # PRETRAIN_PATH: '/home/haoluo/.torch/models/resnet50-19c8e357.pth'
+  PRETRAIN_PATH: '/root/.cache/torch/hub/checkpoints/resnet50-19c8e357.pth'
+  IF_LABELSMOOTH: 'off'
+  IF_WITH_CENTER: 'no'
+  IF_SupCon : 'on'
+
+INPUT:
+  SIZE_TRAIN: [256, 128]
+  SIZE_TEST: [256, 128]
+  PROB: 0.5 # random horizontal flip
+  RE_PROB: 0.5 # random erasing
+  PADDING: 10
+
+DATASETS:
+  NAMES: ('prw')
+
+DATALOADER:
+  SAMPLER: 'SupCon'
+  NUM_WORKERS: 8
+
+SOLVER:
+  OPTIMIZER_NAME: 'sgd'
+  MAX_EPOCHS: 120
+  BASE_LR: 0.5
+  MOMENTUM: 0.9
+  WEIGHT_DECAY: 0.0005
+  WEIGHT_DECAY_BIAS: 0.0005
+  IMS_PER_BATCH: 128
+  CONTRASTIVE_TEMP: 0.1
+
+  STEPS: [30, 55]
+  GAMMA: 0.1
+
+  WARMUP_FACTOR: 0.01
+  WARMUP_ITERS: 5
+  WARMUP_METHOD: 'linear'
+
+  CHECKPOINT_PERIOD: 20
+  LOG_PERIOD: 20
+  EVAL_PERIOD: 10
+
+TEST:
+  IMS_PER_BATCH: 128
+
+OUTPUT_DIR: "/home/haoluo/log/reid/market1501/softmax_bs64_256x128"
+
+

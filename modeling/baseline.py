@@ -6,6 +6,7 @@
 
 import torch
 from torch import nn
+import torch.nn.functional as F
 
 from .backbones.resnet import ResNet, BasicBlock, Bottleneck
 from .backbones.senet import SENet, SEResNetBottleneck, SEBottleneck, SEResNeXtBottleneck
@@ -150,19 +151,33 @@ class Baseline(nn.Module):
             self.bottleneck.apply(weights_init_kaiming)
             self.classifier.apply(weights_init_classifier)
 
+        feat_dim = 128
+        self.head = nn.Sequential(
+                nn.Linear(self.in_planes, self.in_planes),
+                nn.ReLU(inplace=True),
+                nn.Linear(self.in_planes, feat_dim)
+            )
+
     def forward(self, x):
 
         global_feat = self.gap(self.base(x))  # (b, 2048, 1, 1)
         global_feat = global_feat.view(global_feat.shape[0], -1)  # flatten to (bs, 2048)
 
+        # print("global_feat == ",global_feat.shape)
         if self.neck == 'no':
             feat = global_feat
         elif self.neck == 'bnneck':
             feat = self.bottleneck(global_feat)  # normalize for angular softmax
+            # print("feat == ",feat.shape) ## (128,2048)
 
         if self.training:
-            cls_score = self.classifier(feat)
-            return cls_score, global_feat  # global feature for triplet loss
+            # cls_score = self.classifier(feat)
+            # return cls_score, global_feat  # global feature for triplet loss
+
+            # feat = self.encoder(x)
+            feat = F.normalize(self.head(feat), dim=1)  ## (128,128)
+
+            return None, feat
         else:
             if self.neck_feat == 'after':
                 # print("Test with feature after BN")

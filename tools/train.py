@@ -15,110 +15,66 @@ from torch.backends import cudnn
 sys.path.append('.')
 from config import cfg
 from data import make_data_loader
-from engine.trainer import do_train, do_train_with_center
+from engine.trainer import do_train#, do_train_with_center
 from modeling import build_model
-from layers import make_loss, make_loss_with_center
+from layers import make_loss
 from solver import make_optimizer, make_optimizer_with_center, WarmupMultiStepLR
+import torch.optim as optim
 
 from utils.logger import setup_logger
 from test_person_search.libs.datasets import get_data_loader
+
+def set_optimizer(cfg, model):
+    optimizer = optim.SGD(model.parameters(),
+                          lr=cfg.SOLVER.BASE_LR,
+                          momentum=cfg.SOLVER.MOMENTUM,
+                          weight_decay=cfg.SOLVER.WEIGHT_DECAY)
+    return optimizer
+
 
 def train(cfg):
     # prepare dataset
     train_loader, val_loader, num_query, num_classes = make_data_loader(cfg)
 
+
     # prepare model
     model = build_model(cfg, num_classes)
 
-    if cfg.MODEL.IF_WITH_CENTER == 'no':
-        print('Train without center loss, the loss type is', cfg.MODEL.METRIC_LOSS_TYPE)
-        optimizer = make_optimizer(cfg, model)
-        loss_func = make_loss(cfg, num_classes)     # modified by gu
+    # print('Train without center loss, the loss type is', cfg.MODEL.METRIC_LOSS_TYPE)
+    print(hue.info(hue.bold(hue.lightgreen('Train with Supervised Contrastive loss'))))
+    print('Train without center loss and label smoothing CE')
 
-        # Add for using self trained model
-        if cfg.MODEL.PRETRAIN_CHOICE == 'self':
-            start_epoch = eval(cfg.MODEL.PRETRAIN_PATH.split('/')[-1].split('.')[0].split('_')[-1])
-            print('Start epoch:', start_epoch)
-            path_to_optimizer = cfg.MODEL.PRETRAIN_PATH.replace('model', 'optimizer')
-            print('Path to the checkpoint of optimizer:', path_to_optimizer)
-            model.load_state_dict(torch.load(cfg.MODEL.PRETRAIN_PATH))
-            optimizer.load_state_dict(torch.load(path_to_optimizer))
-            scheduler = WarmupMultiStepLR(optimizer, cfg.SOLVER.STEPS, cfg.SOLVER.GAMMA, cfg.SOLVER.WARMUP_FACTOR,
-                                          cfg.SOLVER.WARMUP_ITERS, cfg.SOLVER.WARMUP_METHOD, start_epoch)
-        elif cfg.MODEL.PRETRAIN_CHOICE == 'imagenet':
-            start_epoch = 0
-            scheduler = WarmupMultiStepLR(optimizer, cfg.SOLVER.STEPS, cfg.SOLVER.GAMMA, cfg.SOLVER.WARMUP_FACTOR,
-                                          cfg.SOLVER.WARMUP_ITERS, cfg.SOLVER.WARMUP_METHOD)
-        else:
-            print('Only support pretrain_choice for imagenet and self, but got {}'.format(cfg.MODEL.PRETRAIN_CHOICE))
+    # optimizer = make_optimizer(cfg, model)  
+    optimizer = set_optimizer(cfg, model)
+    loss_func = make_loss(cfg, num_classes)     # modified by gu
 
-        arguments = {}
-
-        print(hue.info(hue.bold(hue.lightgreen('Loading target dataset: {}'.format(cfg.DATASETS.NAMES)))))
-
-        gallery_loader, probe_loader = get_data_loader(cfg.DATASETS.NAMES, train=False)
-
-        dataset_target = cfg.DATASETS.NAMES
-
-        do_train(
-            cfg,
-            model,
-            train_loader, gallery_loader, probe_loader,
-            optimizer,
-            scheduler,      # modify for using self trained model
-            loss_func,
-            num_query,
-            start_epoch,     # add for using self trained model
-            dataset_target
-
-        )
-    elif cfg.MODEL.IF_WITH_CENTER == 'yes':
-        print('Train with center loss, the loss type is', cfg.MODEL.METRIC_LOSS_TYPE)
-        loss_func, center_criterion = make_loss_with_center(cfg, num_classes)  # modified by gu
-        optimizer, optimizer_center = make_optimizer_with_center(cfg, model, center_criterion)
-        # scheduler = WarmupMultiStepLR(optimizer, cfg.SOLVER.STEPS, cfg.SOLVER.GAMMA, cfg.SOLVER.WARMUP_FACTOR,
-        #                               cfg.SOLVER.WARMUP_ITERS, cfg.SOLVER.WARMUP_METHOD)
-
-        arguments = {}
-
-        # Add for using self trained model
-        if cfg.MODEL.PRETRAIN_CHOICE == 'self':
-            start_epoch = eval(cfg.MODEL.PRETRAIN_PATH.split('/')[-1].split('.')[0].split('_')[-1])
-            print('Start epoch:', start_epoch)
-            path_to_optimizer = cfg.MODEL.PRETRAIN_PATH.replace('model', 'optimizer')
-            print('Path to the checkpoint of optimizer:', path_to_optimizer)
-            path_to_center_param = cfg.MODEL.PRETRAIN_PATH.replace('model', 'center_param')
-            print('Path to the checkpoint of center_param:', path_to_center_param)
-            path_to_optimizer_center = cfg.MODEL.PRETRAIN_PATH.replace('model', 'optimizer_center')
-            print('Path to the checkpoint of optimizer_center:', path_to_optimizer_center)
-            model.load_state_dict(torch.load(cfg.MODEL.PRETRAIN_PATH))
-            # optimizer.load_state_dict(torch.load(path_to_optimizer))
-            # center_criterion.load_state_dict(torch.load(path_to_center_param))
-            # optimizer_center.load_state_dict(torch.load(path_to_optimizer_center))
-            scheduler = WarmupMultiStepLR(optimizer, cfg.SOLVER.STEPS, cfg.SOLVER.GAMMA, cfg.SOLVER.WARMUP_FACTOR, cfg.SOLVER.WARMUP_ITERS, cfg.SOLVER.WARMUP_METHOD)
-        elif cfg.MODEL.PRETRAIN_CHOICE == 'imagenet':
-            start_epoch = 0
-            scheduler = WarmupMultiStepLR(optimizer, cfg.SOLVER.STEPS, cfg.SOLVER.GAMMA, cfg.SOLVER.WARMUP_FACTOR, cfg.SOLVER.WARMUP_ITERS, cfg.SOLVER.WARMUP_METHOD)
-        else:
-            print('Only support pretrain_choice for imagenet and self, but got {}'.format(cfg.MODEL.PRETRAIN_CHOICE))
-
-        print(hue.info(hue.bold(hue.lightgreen('Loading target dataset: {}'.format('cuhk')))))
-
-
-        gallery_loader, probe_loader = get_data_loader('cuhk', train=False)
-
-        dataset_target = 'cuhk'#cfg.DATASETS.NAMES
-        do_train_with_center(
-            cfg, model,center_criterion, train_loader, val_loader, gallery_loader, probe_loader,
-            optimizer, optimizer_center, 
-            scheduler, # modify for using self trained model
-            loss_func,
-            num_query,
-            start_epoch,  # add for using self trained model
-            dataset_target
-        )
+    # Add for using self trained model
+    if cfg.MODEL.PRETRAIN_CHOICE == 'self':
+        start_epoch = eval(cfg.MODEL.PRETRAIN_PATH.split('/')[-1].split('.')[0].split('_')[-1])
+        print('Start epoch:', start_epoch)
+        path_to_optimizer = cfg.MODEL.PRETRAIN_PATH.replace('model', 'optimizer')
+        print('Path to the checkpoint of optimizer:', path_to_optimizer)
+        model.load_state_dict(torch.load(cfg.MODEL.PRETRAIN_PATH))
+        optimizer.load_state_dict(torch.load(path_to_optimizer))
+        scheduler = WarmupMultiStepLR(optimizer, cfg.SOLVER.STEPS, cfg.SOLVER.GAMMA, cfg.SOLVER.WARMUP_FACTOR,
+                                    cfg.SOLVER.WARMUP_ITERS, cfg.SOLVER.WARMUP_METHOD, start_epoch)
+    elif cfg.MODEL.PRETRAIN_CHOICE == 'imagenet':
+        start_epoch = 0
+        scheduler = WarmupMultiStepLR(optimizer, cfg.SOLVER.STEPS, cfg.SOLVER.GAMMA, cfg.SOLVER.WARMUP_FACTOR, cfg.SOLVER.WARMUP_ITERS, cfg.SOLVER.WARMUP_METHOD)
     else:
-        print("Unsupported value for cfg.MODEL.IF_WITH_CENTER {}, only support yes or no!\n".format(cfg.MODEL.IF_WITH_CENTER))
+        print('Only support pretrain_choice for imagenet and self, but got {}'.format(cfg.MODEL.PRETRAIN_CHOICE))
+
+    arguments = {}
+    print(hue.info(hue.bold(hue.lightgreen('Loading target dataset: {}'.format(cfg.DATASETS.NAMES)))))
+    # print(model)
+
+    gallery_loader, probe_loader = get_data_loader(cfg.DATASETS.NAMES, train=False)
+    dataset_target = cfg.DATASETS.NAMES
+
+    do_train(cfg, model, train_loader, gallery_loader, probe_loader,
+        optimizer, scheduler,  # modify for using self trained model
+        loss_func, num_query, start_epoch, # add for using self trained model
+        dataset_target)
 
 
 def main():

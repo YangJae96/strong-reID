@@ -8,8 +8,27 @@
 # last stride 1
 # bnneck on
 # without center loss
-python3 tools/train.py --config_file='configs/softmax_triplet.yml' MODEL.DEVICE_ID "('0')" DATASETS.NAMES "('cuhk')" DATASETS.ROOT_DIR "('/root/workplace/dataset/')" OUTPUT_DIR "('/root/workplace/re-Id/reid-strong-baseline/cuhk/prw2cuhkgallery_det_no_center)"
 
 
 
-# python3 tools/train.py --config_file='configs/softmax_triplet_with_center.yml' MODEL.DEVICE_ID "('0')" DATASETS.NAMES "('cuhk')" DATASETS.ROOT_DIR "('/root/workplace/dataset/')" OUTPUT_DIR "('/root/workplace/re-Id/reid-strong-baseline/cuhk/prw2cuhkgallery_det_weak')"
+
+##### Label smooth CE + triplet #####
+# python3 tools/train.py --config_file='configs/softmax_triplet.yml' MODEL.DEVICE_ID "('0')" DATASETS.NAMES "('cuhk')" DATASETS.ROOT_DIR "('/root/workplace/dataset/')" OUTPUT_DIR "('/root/workplace/re-Id/reid-strong-baseline/cuhk/cuhk2gt_no_center2)"
+
+# python3 tools/train.py --config_file='configs/softmax_triplet.yml' MODEL.DEVICE_ID "('0')" DATASETS.NAMES "('prw')" DATASETS.ROOT_DIR "('/root/workplace/dataset/')" OUTPUT_DIR "('/root/workplace/re-Id/reid-strong-baseline/prw/prw2gt_no_center2)"
+#####################################################################################
+
+
+
+##### Only crossEntropy #####
+# python3 tools/train.py --config_file='configs/softmax.yml' MODEL.DEVICE_ID "('0')" DATASETS.NAMES "('prw')" DATASETS.ROOT_DIR "('/root/workplace/dataset/')" OUTPUT_DIR "('/root/workplace/re-Id/reid-strong-baseline/prw/prw2gt_onlycross-Entropy)"
+# 
+# python3 tools/train.py --config_file='configs/softmax.yml' MODEL.DEVICE_ID "('0')" DATASETS.NAMES "('cuhk')" DATASETS.ROOT_DIR "('/root/workplace/dataset/')" OUTPUT_DIR "('/root/workplace/re-Id/reid-strong-baseline/cuhk/cuhk2gt_onlycross-Entropy)"
+# #####################################################################################
+
+##### CrossEntropy + Supervised Contrastive loss #####
+# python3 tools/train.py --config_file='configs/softmax_supcon.yml' MODEL.DEVICE_ID "('0')" DATASETS.NAMES "('prw')" DATASETS.ROOT_DIR "('/root/workplace/dataset/')" OUTPUT_DIR "('/root/workplace/re-Id/reid-strong-baseline/prw/prw2gt_supconLoss2)"
+
+python3 tools/train.py --config_file='configs/softmax_supcon.yml' MODEL.DEVICE_ID "('0')" DATASETS.NAMES "('cuhk')" DATASETS.ROOT_DIR "('/root/workplace/dataset/')" OUTPUT_DIR "('/root/workplace/re-Id/reid-strong-baseline/cuhk/cuhk2gt_supconLoss2)"
+#####################################################################################
+

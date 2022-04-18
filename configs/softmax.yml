@@ -1,6 +1,8 @@
 MODEL:
-  PRETRAIN_PATH: '/home/haoluo/.torch/models/resnet50-19c8e357.pth'
-
+  # PRETRAIN_PATH: '/home/haoluo/.torch/models/resnet50-19c8e357.pth'
+  PRETRAIN_PATH: '/root/.cache/torch/hub/checkpoints/resnet50-19c8e357.pth'
+  IF_LABELSMOOTH: 'off'
+  IF_WITH_CENTER: 'no'
 
 INPUT:
   SIZE_TRAIN: [256, 128]

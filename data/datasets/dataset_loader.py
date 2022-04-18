@@ -40,6 +40,7 @@ class ImageDataset(Dataset):
         img = read_image(img_path)
 
         if self.transform is not None:
-            img = self.transform(img)
+            img1 = self.transform(img)
+            img2 = self.transform(img)
 
-        return img, pid, camid, img_path
+        return img1, img2, pid, camid, img_path

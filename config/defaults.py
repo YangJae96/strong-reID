@@ -41,7 +41,11 @@ _C.MODEL.METRIC_LOSS_TYPE = 'triplet'
 # the setting should be: _C.MODEL.METRIC_LOSS_TYPE = 'triplet_center' and _C.MODEL.IF_WITH_CENTER = 'yes'
 
 # If train with label smooth, options: 'on', 'off'
-_C.MODEL.IF_LABELSMOOTH = 'on'
+_C.MODEL.IF_LABELSMOOTH = 'off'
+
+_C.MODEL.IF_SupCon = 'off'
+
+
 
 
 # -----------------------------------------------------------------------------
@@ -105,6 +109,13 @@ _C.SOLVER.CLUSTER_MARGIN = 0.3
 _C.SOLVER.CENTER_LR = 0.5
 # Balanced weight of center loss
 _C.SOLVER.CENTER_LOSS_WEIGHT = 0.0005
+
+# Balanced weight of center loss
+_C.SOLVER.CONTRASTIVE_TEMP = 0.07
+
+
+
+
 # Settings of range loss
 _C.SOLVER.RANGE_K = 2
 _C.SOLVER.RANGE_MARGIN = 0.3

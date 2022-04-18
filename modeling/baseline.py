@@ -50,7 +50,7 @@ class Baseline(nn.Module):
             self.base = ResNet(last_stride=last_stride,
                                block=BasicBlock,
                                layers=[3, 4, 6, 3])
-        elif model_name == 'resnet50':
+        elif model_name == 'resnet50': ## Always using this for now 
             self.base = ResNet(last_stride=last_stride,
                                block=Bottleneck,
                                layers=[3, 4, 6, 3])

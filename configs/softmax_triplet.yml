@@ -1,9 +1,17 @@
 MODEL:
   PRETRAIN_CHOICE: 'imagenet'
-  PRETRAIN_PATH: '/home/haoluo/.torch/models/resnet50-19c8e357.pth'
+  PRETRAIN_PATH: '/root/.cache/torch/hub/checkpoints/resnet50-19c8e357.pth'
   METRIC_LOSS_TYPE: 'triplet'
   IF_LABELSMOOTH: 'on'
   IF_WITH_CENTER: 'no'
+
+# MODEL:
+#   PRETRAIN_CHOICE: 'imagenet'
+#   PRETRAIN_PATH: '/root/.cache/torch/hub/checkpoints/resnet50-19c8e357.pth'
+#   METRIC_LOSS_TYPE: 'triplet_center'
+#   IF_LABELSMOOTH: 'on'
+#   IF_WITH_CENTER: 'yes'
+
 
 
 
@@ -53,7 +61,7 @@ SOLVER:
 
   CHECKPOINT_PERIOD: 40
   LOG_PERIOD: 20
-  EVAL_PERIOD: 40
+  EVAL_PERIOD: 10
 
 TEST:
   IMS_PER_BATCH: 128

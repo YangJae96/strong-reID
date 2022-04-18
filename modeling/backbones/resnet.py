@@ -133,6 +133,7 @@ class ResNet(nn.Module):
         return x
 
     def load_param(self, model_path):
+        print("model_path == ",model_path)
         param_dict = torch.load(model_path)
         for i in param_dict:
             if 'fc' in i:

@@ -3,6 +3,7 @@
 @author:  sherlock
 @contact: sherlockliao01@gmail.com
 """
+import huepy as hue
 
 import argparse
 import os
@@ -20,7 +21,7 @@ from layers import make_loss, make_loss_with_center
 from solver import make_optimizer, make_optimizer_with_center, WarmupMultiStepLR
 
 from utils.logger import setup_logger
-
+from test_person_search.libs.datasets import get_data_loader
 
 def train(cfg):
     # prepare dataset
@@ -32,9 +33,6 @@ def train(cfg):
     if cfg.MODEL.IF_WITH_CENTER == 'no':
         print('Train without center loss, the loss type is', cfg.MODEL.METRIC_LOSS_TYPE)
         optimizer = make_optimizer(cfg, model)
-        # scheduler = WarmupMultiStepLR(optimizer, cfg.SOLVER.STEPS, cfg.SOLVER.GAMMA, cfg.SOLVER.WARMUP_FACTOR,
-        #                               cfg.SOLVER.WARMUP_ITERS, cfg.SOLVER.WARMUP_METHOD)
-
         loss_func = make_loss(cfg, num_classes)     # modified by gu
 
         # Add for using self trained model
@@ -56,16 +54,23 @@ def train(cfg):
 
         arguments = {}
 
+        print(hue.info(hue.bold(hue.lightgreen('Loading target dataset: {}'.format(cfg.DATASETS.NAMES)))))
+
+        gallery_loader, probe_loader = get_data_loader(cfg.DATASETS.NAMES, train=False)
+
+        dataset_target = cfg.DATASETS.NAMES
+
         do_train(
             cfg,
             model,
-            train_loader,
-            val_loader,
+            train_loader, gallery_loader, probe_loader,
             optimizer,
             scheduler,      # modify for using self trained model
             loss_func,
             num_query,
-            start_epoch     # add for using self trained model
+            start_epoch,     # add for using self trained model
+            dataset_target
+
         )
     elif cfg.MODEL.IF_WITH_CENTER == 'yes':
         print('Train with center loss, the loss type is', cfg.MODEL.METRIC_LOSS_TYPE)
@@ -87,30 +92,30 @@ def train(cfg):
             path_to_optimizer_center = cfg.MODEL.PRETRAIN_PATH.replace('model', 'optimizer_center')
             print('Path to the checkpoint of optimizer_center:', path_to_optimizer_center)
             model.load_state_dict(torch.load(cfg.MODEL.PRETRAIN_PATH))
-            optimizer.load_state_dict(torch.load(path_to_optimizer))
-            center_criterion.load_state_dict(torch.load(path_to_center_param))
-            optimizer_center.load_state_dict(torch.load(path_to_optimizer_center))
-            scheduler = WarmupMultiStepLR(optimizer, cfg.SOLVER.STEPS, cfg.SOLVER.GAMMA, cfg.SOLVER.WARMUP_FACTOR,
-                                          cfg.SOLVER.WARMUP_ITERS, cfg.SOLVER.WARMUP_METHOD, start_epoch)
+            # optimizer.load_state_dict(torch.load(path_to_optimizer))
+            # center_criterion.load_state_dict(torch.load(path_to_center_param))
+            # optimizer_center.load_state_dict(torch.load(path_to_optimizer_center))
+            scheduler = WarmupMultiStepLR(optimizer, cfg.SOLVER.STEPS, cfg.SOLVER.GAMMA, cfg.SOLVER.WARMUP_FACTOR, cfg.SOLVER.WARMUP_ITERS, cfg.SOLVER.WARMUP_METHOD)
         elif cfg.MODEL.PRETRAIN_CHOICE == 'imagenet':
             start_epoch = 0
-            scheduler = WarmupMultiStepLR(optimizer, cfg.SOLVER.STEPS, cfg.SOLVER.GAMMA, cfg.SOLVER.WARMUP_FACTOR,
-                                          cfg.SOLVER.WARMUP_ITERS, cfg.SOLVER.WARMUP_METHOD)
+            scheduler = WarmupMultiStepLR(optimizer, cfg.SOLVER.STEPS, cfg.SOLVER.GAMMA, cfg.SOLVER.WARMUP_FACTOR, cfg.SOLVER.WARMUP_ITERS, cfg.SOLVER.WARMUP_METHOD)
         else:
             print('Only support pretrain_choice for imagenet and self, but got {}'.format(cfg.MODEL.PRETRAIN_CHOICE))
 
+        print(hue.info(hue.bold(hue.lightgreen('Loading target dataset: {}'.format('cuhk')))))
+
+
+        gallery_loader, probe_loader = get_data_loader('cuhk', train=False)
+
+        dataset_target = 'cuhk'#cfg.DATASETS.NAMES
         do_train_with_center(
-            cfg,
-            model,
-            center_criterion,
-            train_loader,
-            val_loader,
-            optimizer,
-            optimizer_center,
-            scheduler,      # modify for using self trained model
+            cfg, model,center_criterion, train_loader, val_loader, gallery_loader, probe_loader,
+            optimizer, optimizer_center, 
+            scheduler, # modify for using self trained model
             loss_func,
             num_query,
-            start_epoch     # add for using self trained model
+            start_epoch,  # add for using self trained model
+            dataset_target
         )
     else:
         print("Unsupported value for cfg.MODEL.IF_WITH_CENTER {}, only support yes or no!\n".format(cfg.MODEL.IF_WITH_CENTER))

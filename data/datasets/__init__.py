@@ -9,6 +9,9 @@ from .market1501 import Market1501
 from .msmt17 import MSMT17
 from .veri import VeRi
 from .dataset_loader import ImageDataset
+from .prw_crop import PRW_CROP
+from .cuhk_crop import CUHK_CROP
+
 
 __factory = {
     'market1501': Market1501,
@@ -16,6 +19,8 @@ __factory = {
     'dukemtmc': DukeMTMCreID,
     'msmt17': MSMT17,
     'veri': VeRi,
+    'prw' : PRW_CROP,
+    'cuhk' : CUHK_CROP,
 }
 
 

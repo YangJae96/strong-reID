@@ -43,9 +43,12 @@ def make_loss(cfg, num_classes):    # modified by gu
                 print('expected METRIC_LOSS_TYPE should be triplet'
                       'but got {}'.format(cfg.MODEL.METRIC_LOSS_TYPE))
     elif cfg.DATALOADER.SAMPLER == 'SupCon':
+        # xent = CrossEntropyLabelSmooth(num_classes=num_classes)     # new add by luo
+        # print("label smooth on, numclasses:", num_classes)
         def loss_func(score, feat, target):
-            return contrastive(feat, target)
-            # return F.cross_entropy(score, target) + contrastive(feat, target)
+            return F.cross_entropy(score, target) + contrastive(feat, target)
+            # return xent(score, target) + contrastive(feat, target)
+
     else:
         print('expected sampler should be softmax, triplet or softmax_triplet, '
               'but got {}'.format(cfg.DATALOADER.SAMPLER))

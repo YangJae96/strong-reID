@@ -171,13 +171,13 @@ class Baseline(nn.Module):
             # print("feat == ",feat.shape) ## (128,2048)
 
         if self.training:
-            # cls_score = self.classifier(feat)
+            cls_score = self.classifier(feat)
             # return cls_score, global_feat  # global feature for triplet loss
 
             # feat = self.encoder(x)
             feat = F.normalize(self.head(feat), dim=1)  ## (128,128)
 
-            return None, feat
+            return cls_score, feat
         else:
             if self.neck_feat == 'after':
                 # print("Test with feature after BN")

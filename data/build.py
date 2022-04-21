@@ -36,9 +36,11 @@ def make_data_loader(cfg):
     
     if cfg.DATALOADER.SAMPLER =='SupCon':
         normalize_transform = T.Normalize(mean=cfg.INPUT.PIXEL_MEAN, std=cfg.INPUT.PIXEL_STD)
+        
         # TwoCropTransform(train_transform)
         train_transforms = T.Compose([
-        T.RandomResizedCrop(size=cfg.INPUT.SIZE_TRAIN, scale=(0.2, 1.)),
+        # T.RandomResizedCrop(size=cfg.INPUT.SIZE_TRAIN, scale=(0.2, 1.)),
+        T.Resize(size=cfg.INPUT.SIZE_TRAIN),
         T.RandomHorizontalFlip(p=cfg.INPUT.PROB),
         T.RandomApply([
             T.ColorJitter(0.4, 0.4, 0.4, 0.1)
@@ -47,8 +49,14 @@ def make_data_loader(cfg):
         T.ToTensor(),
         normalize_transform,
         ])
+
+        org_transforms = T.Compose([
+        T.Resize(size=cfg.INPUT.SIZE_TRAIN),
+        T.ToTensor(),
+        normalize_transform,
+        ])
     
-    train_set = ImageDataset(dataset.train, train_transforms)
+    train_set = ImageDataset(dataset.train, org_transforms, train_transforms)
     
     
     if cfg.DATALOADER.SAMPLER == 'softmax' :

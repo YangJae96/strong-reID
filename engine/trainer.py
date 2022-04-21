@@ -7,18 +7,15 @@
 import logging
 import time
 import os.path as osp
+import os 
 
 import torch
 import torch.nn as nn
 import huepy as hue
-# from utils.reid_metric import R1_mAP
 from .logger import MetricLogger
-
-
 from test_person_search.libs.datasets import get_data_loader
 from test_person_search.libs.utils.evaluator import GT_inference, inference, detection_performance_calc
 import shutil
-# from .osutils import mkdir_if_missing
 
 global ITER
 ITER = 0
@@ -51,6 +48,9 @@ def do_train(
     logger = logging.getLogger("reid_baseline.train")
     logger.info("Start training")
 
+    print(hue.info(hue.bold(hue.lightgreen('Working directory: {}'.format(cfg.OUTPUT_DIR)))))
+
+    os.makedirs(cfg.OUTPUT_DIR, exist_ok=True)
     model.cuda()
 
     best_mAP = 0
@@ -81,7 +81,11 @@ def do_train(
 
             # images = images.to(device) if torch.cuda.device_count() >= 1 else images
             # target = target.to(device) if torch.cuda.device_count() >= 1 else target
-            _, feat = model(images)
+            score, feat = model(images)
+
+            # print("score == ",score.shape)
+            # print("feat == ",feat.shape)
+            # print("target == ",target.shape)
 
             # # compute loss
             # features = model(images)
@@ -90,9 +94,8 @@ def do_train(
             # # print("labels == ",labels.shape) ## (256)
             # if opt.method == 'SupCon':
             #     loss = criterion(features, labels)
-            score = None
-            loss = loss_fn(score, features, target)
-            
+            loss = loss_fn(score[:bsz], features, target)
+
             loss.backward()
             optimizer.step()
             

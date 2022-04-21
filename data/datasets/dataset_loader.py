@@ -28,8 +28,9 @@ def read_image(img_path):
 class ImageDataset(Dataset):
     """Image Person ReID Dataset"""
 
-    def __init__(self, dataset, transform=None):
+    def __init__(self, dataset, org_transforms=None, transform=None):
         self.dataset = dataset
+        self.org_transform = org_transforms
         self.transform = transform
 
     def __len__(self):
@@ -40,7 +41,9 @@ class ImageDataset(Dataset):
         img = read_image(img_path)
 
         if self.transform is not None:
-            img1 = self.transform(img)
+
+            # img1 = self.transform(img)
+            img1 = self.org_transform(img)
             img2 = self.transform(img)
 
         return img1, img2, pid, camid, img_path

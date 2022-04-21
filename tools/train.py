@@ -66,7 +66,11 @@ def train(cfg):
 
     arguments = {}
     print(hue.info(hue.bold(hue.lightgreen('Loading target dataset: {}'.format(cfg.DATASETS.NAMES)))))
-    # print(model)
+    print(model)
+
+    model.base.conv1.weight.requires_grad_(False)
+    model.base.bn1.weight.requires_grad_(False)
+    model.base.bn1.bias.requires_grad_(False)
 
     gallery_loader, probe_loader = get_data_loader(cfg.DATASETS.NAMES, train=False)
     dataset_target = cfg.DATASETS.NAMES
